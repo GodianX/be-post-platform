@@ -1,0 +1,32 @@
+monolog:
+    channels:
+        - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+
+when@dev:
+    monolog:
+        handlers:
+            main:
+                type:         fingers_crossed
+                action_level: error
+                handler:      grouped
+                channels:
+                    - '!event'
+                    - '!deprecation'
+                    - '!request'
+                    - '!doctrine'
+                    - '!security'
+            grouped:
+                type:         whatfailuregroup
+                members:      [elk, file]
+            file:
+                type:         stream
+                path:         "%kernel.logs_dir%/%kernel.environment%.log"
+                level:        error
+            elk:
+                type: gelf
+                index: pp-logs
+                publisher:
+                    hostname: '%env(resolve:ELASTICSEARCH_HOST)%'
+                    port: '%env(resolve:ELASTICSEARCH_PORT)%'
+                level: error
+                formatter: 'monolog.formatter.gelf_message'
